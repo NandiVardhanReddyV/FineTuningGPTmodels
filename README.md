@@ -30,7 +30,7 @@ Replace `<YOUR_REPO_URL>` with the URL of your GitHub repository.
 ### 3) Install dependencies
 
 ```bash
-!pip -q install "transformers>=4.37" datasets accelerate torch sentencepiece langchain python-dotenv requests
+!pip -q install datasets transformers accelerate torch sentencepiece langchain python-dotenv requests
 ```
 
 ### 4) (Optional) Download the dataset as CSV
