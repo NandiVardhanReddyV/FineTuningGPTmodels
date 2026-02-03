@@ -45,9 +45,17 @@
 #     fine_tune("models")
 
 import os
+from inspect import signature
+
 from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Trainer, TrainingArguments
 import torch
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+    DataCollatorForSeq2Seq,
+    Trainer,
+    TrainingArguments,
+)
 
 def preprocess_function(examples, tokenizer):
     max_input_length = 64  # Reduced input length
@@ -84,23 +92,30 @@ def fine_tune(output_dir):
     )
 
     # Training arguments
-    training_args = TrainingArguments(
-        output_dir=os.path.join(output_dir, "results"),
-        evaluation_strategy="epoch",
-        learning_rate=2e-5,
-        per_device_train_batch_size=2,  # Smaller batch size
-        per_device_eval_batch_size=2,
-        num_train_epochs=1,  # Fewer epochs
-        weight_decay=0.01,
-        save_steps=100,
-        save_total_limit=1,
-        logging_dir=os.path.join(output_dir, "logs"),
-        logging_steps=10,
-        gradient_accumulation_steps=16,  # Accumulating gradients
-        fp16=torch.cuda.is_available(),  # Mixed precision
-        dataloader_num_workers=0,  # Compatibility with Windows
-        report_to="none",
-    )
+    training_args_kwargs = {
+        "output_dir": os.path.join(output_dir, "results"),
+        "learning_rate": 2e-5,
+        "per_device_train_batch_size": 2,  # Smaller batch size
+        "per_device_eval_batch_size": 2,
+        "num_train_epochs": 1,  # Fewer epochs
+        "weight_decay": 0.01,
+        "save_steps": 100,
+        "save_total_limit": 1,
+        "logging_dir": os.path.join(output_dir, "logs"),
+        "logging_steps": 10,
+        "gradient_accumulation_steps": 16,  # Accumulating gradients
+        "fp16": torch.cuda.is_available(),  # Mixed precision
+        "dataloader_num_workers": 0,  # Compatibility with Windows
+        "report_to": "none",
+    }
+
+    training_args_params = signature(TrainingArguments).parameters
+    if "evaluation_strategy" in training_args_params:
+        training_args_kwargs["evaluation_strategy"] = "epoch"
+    elif "eval_strategy" in training_args_params:
+        training_args_kwargs["eval_strategy"] = "epoch"
+
+    training_args = TrainingArguments(**training_args_kwargs)
 
     # Define Trainer
     trainer = Trainer(
